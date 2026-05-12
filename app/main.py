@@ -1,10 +1,8 @@
-from pathlib import Path
-
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.config import CHAT_UPLOAD_DIR, PUBLIC_DIR, STATIC_DIR
+from app.config import CHAT_UPLOAD_DIR, PUBLIC_DIR
 from app.routers.chat import router as chat_router
 from app.services.chat.account_service import ChatAccountService
 from app.services.chat.file_service import ChatFileService
@@ -23,8 +21,6 @@ app.state.upstream_chat_adapter = UpstreamChatAdapter()
 
 app.include_router(chat_router)
 
-if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 if PUBLIC_DIR.exists():
     css_dir = PUBLIC_DIR / "css"
     js_dir = PUBLIC_DIR / "js"
@@ -42,8 +38,6 @@ async def root() -> RedirectResponse:
 @app.get("/chat", response_class=HTMLResponse, include_in_schema=False)
 async def chat_page() -> HTMLResponse:
     path = PUBLIC_DIR / "index.html"
-    if not path.exists():
-        path = STATIC_DIR / "chat.html"
     if not path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat UI not found.")
     return HTMLResponse(path.read_text(encoding="utf-8"))

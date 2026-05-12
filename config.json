@@ -1,0 +1,30 @@
+{
+  "auth": {
+    "keys": [
+      {
+        "id": "admin",
+        "key": "change-me",
+        "role": "admin"
+      }
+    ]
+  },
+  "chat": {
+    "enabled": true,
+    "default_model": "auto",
+    "accounts": [
+      {
+        "id": "account-1",
+        "name": "Default Chat Account",
+        "enabled": true,
+        "secure_1psid": "g.a0009wjuaLvq5YEd_d2hJip4ktVS69RqKxDEC150FB9KFtzRbI43t5Lcxwdcy-Llycke7I5JLQACgYKAZoSARcSFQHGX2MifO-wEhrkpwVCOd8W_0d0hhoVAUF8yKqTub2G46MBpfWzGbidhiV_0076",
+        "secure_1psidts": "sidts-CjYBhkeRd799EANl6sUVAfsnmUMF1pdKtqna6S-wxlZvT7y3Az1rXg0bDm0iem8gfTjGrNlITQYQAA",
+        "proxy": "",
+        "metadata": {}
+      }
+    ],
+    "upload": {
+      "max_file_mb": 20,
+      "max_files_per_message": 5
+    }
+  }
+}

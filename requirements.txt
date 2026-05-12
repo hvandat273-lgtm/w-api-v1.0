@@ -1,5 +1,6 @@
-browser-cookie3==0.20.1
-gemini-webapi==1.10.2
 fastapi==0.115.12
-aiosqlite
-uvicorn
+uvicorn[standard]==0.34.2
+gemini-webapi==1.10.2
+python-multipart==0.0.20
+pytest==8.3.5
+httpx==0.28.1

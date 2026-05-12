@@ -1,3 +1,8 @@
-.env
-*.pyc
-chat_sessions.db
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+config.local.json
+data/chat_uploads/*
+!data/chat_uploads/.gitkeep

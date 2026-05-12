@@ -1,1 +1,1 @@
-# This file makes Python treat the directory 'app' as a package.
+"""Backend package for the webchat scaffold."""

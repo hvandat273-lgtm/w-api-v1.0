@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Webchat</title>
+    <link rel="stylesheet" href="/static/css/chat.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <span class="brand-title">Webchat</span>
+        </div>
+        <button class="primary-action" id="newChatButton" type="button">
+          <span aria-hidden="true">+</span>
+          New chat
+        </button>
+        <label class="search-row">
+          <span aria-hidden="true">⌕</span>
+          <input id="searchInput" type="search" placeholder="Search chats">
+        </label>
+        <div class="conversation-list" id="conversationList"></div>
+      </aside>
+
+      <main class="chat-panel">
+        <header class="topbar">
+          <button class="icon-button menu-button" id="menuButton" type="button" aria-label="Open chats">☰</button>
+          <div class="title-block">
+            <h1 id="conversationTitle">New chat</h1>
+            <span id="conversationMeta">Local history</span>
+          </div>
+          <div class="auth-box">
+            <input id="authKeyInput" type="password" autocomplete="off" placeholder="App key">
+            <button class="secondary-action" id="saveAuthButton" type="button">Save</button>
+          </div>
+        </header>
+
+        <section class="thread" id="thread" aria-live="polite"></section>
+
+        <section class="composer-wrap">
+          <div class="status-line" id="statusLine"></div>
+          <div class="file-chips" id="fileChips"></div>
+          <form class="composer" id="composer">
+            <input id="fileInput" type="file" multiple hidden accept=".png,.jpg,.jpeg,.webp,.txt,.md,.json,.csv,.log,image/png,image/jpeg,image/webp,text/plain,text/markdown,application/json,text/csv">
+            <button class="icon-button" id="attachButton" type="button" aria-label="Attach file">⌘</button>
+            <textarea id="messageInput" rows="1" placeholder="Message"></textarea>
+            <button class="send-button" id="sendButton" type="submit" aria-label="Send">↑</button>
+          </form>
+        </section>
+      </main>
+    </div>
+    <script src="/static/js/chat.js"></script>
+  </body>
+</html>

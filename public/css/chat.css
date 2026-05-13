@@ -224,6 +224,10 @@
   animation: blink 0.7s infinite;
   color: var(--text-secondary);
 }
+.streaming-text {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
 /* Thinking dots */

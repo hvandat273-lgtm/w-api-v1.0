@@ -1,6 +1,7 @@
 const Chat = (() => {
   let _currentConvId = null;
   let _jpViMode = false;
+  const STREAM_RENDER_INTERVAL_MS = 80;
 
   const JP_VI_PROMPT = `Bạn là một chuyên gia dịch thuật Nhật - Việt chuyên sâu về lĩnh vực Thiết kế đồ họa/IT/Kỹ thuật. Hãy phân tích hình ảnh tôi cung cấp và dịch theo yêu cầu sau:
 
@@ -251,16 +252,15 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
     State.setStreaming(true);
     document.getElementById('send-btn').disabled = true;
     const contentDiv = createStreamingBubble();
+    let streamingRenderer = null;
 
     try {
-      const finalText = await API.chat(apiMessages, model, (accumulated) => {
-        contentDiv.className = 'streaming-cursor';
-        contentDiv.innerHTML = Markdown.render(accumulated);
-        scrollToBottom();
+      streamingRenderer = createStreamingRenderer(contentDiv);
+      const finalText = await API.chat(apiMessages, model, (accumulated, delta) => {
+        streamingRenderer.push(accumulated, delta);
       }, apiAttachments, _currentConvId);
 
-      contentDiv.className = '';
-      contentDiv.innerHTML = Markdown.render(finalText);
+      streamingRenderer.finish(finalText);
 
       State.addMessage(_currentConvId, {
         id: State.uuid(),
@@ -270,6 +270,7 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
       });
       Sidebar.render();
     } catch (err) {
+      streamingRenderer?.cancel();
       contentDiv.className = '';
       contentDiv.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(err.message)}</span>`;
       Toast.show(err.message, 'error', 5000);
@@ -293,6 +294,78 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
   function scrollToBottom() {
     const messages = document.getElementById('messages');
     messages.scrollTop = messages.scrollHeight;
+  }
+
+  function createStreamingRenderer(contentDiv) {
+    let fullText = '';
+    let pendingText = '';
+    let timer = null;
+    const textNode = document.createTextNode('');
+
+    contentDiv.className = 'streaming-cursor streaming-text';
+    contentDiv.innerHTML = '';
+    contentDiv.appendChild(textNode);
+
+    function schedule() {
+      if (timer) return;
+      timer = setTimeout(flush, STREAM_RENDER_INTERVAL_MS);
+    }
+
+    function flush() {
+      timer = null;
+      if (pendingText) {
+        textNode.appendData(pendingText);
+        pendingText = '';
+      }
+      scrollToBottom();
+    }
+
+    function setText(text) {
+      pendingText = '';
+      fullText = text;
+      textNode.data = text;
+      scrollToBottom();
+    }
+
+    function push(accumulated, delta = '') {
+      const nextText = typeof accumulated === 'string' ? accumulated : '';
+      const deltaText = typeof delta === 'string' ? delta : '';
+
+      if (deltaText && nextText.startsWith(fullText)) {
+        const appendedText = nextText.slice(fullText.length);
+        if (appendedText) {
+          pendingText += appendedText;
+          fullText = nextText;
+          schedule();
+        }
+        return;
+      }
+
+      if (nextText !== fullText) {
+        setText(nextText);
+      }
+    }
+
+    function finish(finalText) {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      flush();
+      contentDiv.className = '';
+      contentDiv.innerHTML = Markdown.render(finalText);
+      scrollToBottom();
+    }
+
+    function cancel() {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      pendingText = '';
+    }
+
+    return { push, finish, cancel };
   }
 
   function escHtml(str) {

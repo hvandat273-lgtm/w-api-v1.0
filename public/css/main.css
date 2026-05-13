@@ -157,7 +157,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   border-radius: var(--radius);
-  background: transparent;
+  background-color: transparent;
   color: var(--text-primary);
   border: none;
   cursor: pointer;
@@ -167,6 +167,21 @@ body {
   background-position: right 6px center;
 }
 #model-select:hover { background-color: var(--bg-hover); }
+
+#model-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] #model-select option {
+  background: #1f1f1f;
+  color: #ececec;
+}
+
+[data-theme="light"] #model-select option {
+  background: #ffffff;
+  color: #0d0d0d;
+}
 
 .topbar-right { display: flex; align-items: center; gap: 4px; }
 

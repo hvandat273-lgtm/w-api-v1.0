@@ -7,18 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
   FileHandler.init();
 
   const modelSel = document.getElementById('model-select');
-  const savedModel = State.getModel();
+  const savedModel = normalizeModelValue(State.getModel());
   modelSel.value = [...modelSel.options].some(option => option.value === savedModel) ? savedModel : 'auto';
   State.setModel(modelSel.value);
-  modelSel.addEventListener('change', e => State.setModel(e.target.value));
-
-  const adminBtn = document.getElementById('admin-page-btn');
-  adminBtn?.addEventListener('click', () => {
-    window.location.href = '/admin2732000';
+  modelSel.addEventListener('change', e => {
+    const model = normalizeModelValue(e.target.value);
+    e.target.value = model;
+    State.setModel(model);
   });
 
-  window.addEventListener('app-key-verified', event => {
-    updateAdminAccess(event.detail);
+  window.addEventListener('app-key-verified', () => {
     hideAuthGate();
   });
 
@@ -36,6 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+function normalizeModelValue(model) {
+  const value = String(model || '').trim();
+  if (!value || value.toLowerCase() === 'auto' || value.toLowerCase() === 'default') {
+    return 'auto';
+  }
+  return value;
+}
 
 function initAuthGate() {
   const form = document.getElementById('auth-gate-form');
@@ -80,7 +86,6 @@ async function verifyStoredKey() {
     window.dispatchEvent(new CustomEvent('app-key-verified', { detail: identity }));
   } catch (_) {
     State.setApiKey('');
-    updateAdminAccess(null);
     showAuthGate('App key đã lưu không còn hợp lệ. Vui lòng nhập lại.', true);
   }
 }
@@ -101,9 +106,4 @@ function setAuthGateMessage(message, isError = false) {
   const el = document.getElementById('auth-gate-message');
   el.textContent = message;
   el.classList.toggle('error', isError);
-}
-
-function updateAdminAccess(identity) {
-  const adminBtn = document.getElementById('admin-page-btn');
-  adminBtn?.classList.toggle('hidden', identity?.role !== 'admin');
 }

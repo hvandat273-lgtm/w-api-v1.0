@@ -1,4 +1,10 @@
 const FileHandler = (() => {
+  const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
+  const TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.csv', '.log'];
+  const IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+  const TEXT_MIME_TYPES = ['text/plain', 'text/markdown', 'application/json', 'text/csv'];
+  const SUPPORTED_FILE_LABEL = 'PNG, JPG, JPEG, WEBP, TXT, MD, JSON, CSV, LOG';
+
   function init() {
     document.getElementById('img-btn').addEventListener('click', () => {
       document.getElementById('image-input').click();
@@ -32,22 +38,36 @@ const FileHandler = (() => {
       e.preventDefault();
       inputArea.style.borderColor = '';
       Array.from(e.dataTransfer.files).forEach(file => {
-        if (file.type.startsWith('image/')) processImage(file);
-        else processDocFile(file);
+        processFile(file);
       });
     });
   }
 
   async function handleFiles(fileList) {
     for (const file of Array.from(fileList)) {
-      if (file.type.startsWith('image/')) await processImage(file);
-      else await processDocFile(file);
+      await processFile(file);
     }
     document.getElementById('image-input').value = '';
     document.getElementById('file-input').value = '';
   }
 
+  async function processFile(file) {
+    if (isSupportedImageFile(file)) {
+      await processImage(file);
+      return;
+    }
+    if (isSupportedTextFile(file)) {
+      await processDocFile(file);
+      return;
+    }
+    Toast.show(`File không được hỗ trợ: ${file.name}. Chỉ hỗ trợ ${SUPPORTED_FILE_LABEL}.`, 'error');
+  }
+
   async function processImage(file) {
+    if (!isSupportedImageFile(file)) {
+      Toast.show(`Ảnh không được hỗ trợ: ${file.name}. Chỉ hỗ trợ PNG, JPG, JPEG, WEBP.`, 'error');
+      return;
+    }
     if (file.size > 20 * 1024 * 1024) {
       Toast.show('Ảnh quá lớn (tối đa 20MB)', 'error');
       return;
@@ -82,10 +102,8 @@ const FileHandler = (() => {
   }
 
   async function processDocFile(file) {
-    const allowed = ['text/plain', 'text/markdown', 'application/json', 'text/csv'];
-    const extOk = /\.(txt|md|json|csv|log)$/i.test(file.name);
-    if (!allowed.includes(file.type) && !extOk) {
-      Toast.show(`File không được hỗ trợ: ${file.name}`, 'error');
+    if (!isSupportedTextFile(file)) {
+      Toast.show(`File không được hỗ trợ: ${file.name}. Chỉ hỗ trợ TXT, MD, JSON, CSV, LOG.`, 'error');
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
@@ -115,6 +133,7 @@ const FileHandler = (() => {
     const atts = State.getPendingAttachments();
     if (atts.length === 0) {
       preview.innerHTML = '';
+      Chat.updateSendBtn?.();
       return;
     }
 
@@ -131,6 +150,7 @@ const FileHandler = (() => {
         <button class="attachment-remove" onclick="FileHandler.removeAttachment(${i})">×</button>
       </div>`;
     }).join('');
+    Chat.updateSendBtn?.();
   }
 
   function removeAttachment(index) {
@@ -145,6 +165,18 @@ const FileHandler = (() => {
 
   function escHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function getExtension(file) {
+    return `.${String(file.name || '').split('.').pop()}`.toLowerCase();
+  }
+
+  function isSupportedImageFile(file) {
+    return IMAGE_MIME_TYPES.includes(file.type) || IMAGE_EXTENSIONS.includes(getExtension(file));
+  }
+
+  function isSupportedTextFile(file) {
+    return TEXT_MIME_TYPES.includes(file.type) || TEXT_EXTENSIONS.includes(getExtension(file));
   }
 
   return { init, processImage, processDocFile, removeAttachment, clearPreview };

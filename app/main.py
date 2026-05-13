@@ -3,10 +3,13 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import CHAT_UPLOAD_DIR, PUBLIC_DIR
+from app.routers.admin import router as admin_router
 from app.routers.chat import router as chat_router
+from app.routers.session import router as session_router
 from app.services.chat.account_service import ChatAccountService
 from app.services.chat.file_service import ChatFileService
 from app.services.chat.upstream_adapter import UpstreamChatAdapter
+from app.services.config_store import ConfigStore
 
 
 app = FastAPI(
@@ -18,8 +21,11 @@ app = FastAPI(
 app.state.chat_account_service = ChatAccountService()
 app.state.chat_file_service = ChatFileService(CHAT_UPLOAD_DIR)
 app.state.upstream_chat_adapter = UpstreamChatAdapter()
+app.state.config_store = ConfigStore()
 
 app.include_router(chat_router)
+app.include_router(session_router)
+app.include_router(admin_router)
 
 if PUBLIC_DIR.exists():
     css_dir = PUBLIC_DIR / "css"
@@ -40,6 +46,14 @@ async def chat_page() -> HTMLResponse:
     path = PUBLIC_DIR / "index.html"
     if not path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat UI not found.")
+    return HTMLResponse(path.read_text(encoding="utf-8"))
+
+
+@app.get("/admin2732000", response_class=HTMLResponse, include_in_schema=False)
+async def admin_page() -> HTMLResponse:
+    path = PUBLIC_DIR / "admin.html"
+    if not path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Admin UI not found.")
     return HTMLResponse(path.read_text(encoding="utf-8"))
 
 

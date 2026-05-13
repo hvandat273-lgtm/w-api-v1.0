@@ -7,6 +7,25 @@ from app.services.chat.file_service import IMAGE_EXTENSIONS, TEXT_EXTENSIONS
 
 
 class UpstreamChatAdapter:
+    async def check_account(self, account: ChatAccountConfig) -> str:
+        try:
+            from gemini_webapi import GeminiClient
+        except ImportError as exc:
+            raise RuntimeError("gemini-webapi is not installed.") from exc
+
+        client = GeminiClient(
+            account.secure_1psid,
+            account.secure_1psidts,
+            proxy=account.proxy or None,
+        )
+        try:
+            await client.init(timeout=60, auto_close=False, auto_refresh=True)
+            return "Cookie is usable."
+        finally:
+            close = getattr(client, "close", None)
+            if close:
+                await close()
+
     async def complete(
         self,
         account: ChatAccountConfig,

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Gemini Web Chat</title>
+  <link rel="stylesheet" href="/css/themes.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <header class="admin-topbar">
+    <div>
+      <h1>Admin</h1>
+      <p>Quản lý App keys và Gemini cookie accounts trong config.json</p>
+    </div>
+    <div class="topbar-actions">
+      <span id="identity-label" class="identity-label">Chưa đăng nhập</span>
+      <a class="link-btn" href="/chat">Chat</a>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section id="auth-panel" class="auth-panel">
+      <h2>Nhập Admin App key</h2>
+      <div class="auth-row">
+        <input id="admin-key-input" type="password" autocomplete="off" placeholder="App key role admin" />
+        <button id="admin-key-save-btn" class="btn-primary" type="button">Kiểm tra</button>
+      </div>
+      <p id="auth-message" class="muted">Key này là key trong auth.keys của config.json.</p>
+    </section>
+
+    <section id="admin-panel" class="hidden">
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="accounts">Cookie Accounts</button>
+        <button class="tab-btn" data-tab="keys">App Keys</button>
+      </nav>
+
+      <section id="accounts-tab" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>Gemini Cookie Accounts</h2>
+            <p>Cookie đã lưu chỉ hiển thị dạng rút gọn.</p>
+          </div>
+          <button id="add-account-btn" class="btn-primary" type="button">Thêm account</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên</th>
+                <th>Bật</th>
+                <th>Proxy</th>
+                <th>1PSID</th>
+                <th>1PSIDTS</th>
+                <th>Trạng thái</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="accounts-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="keys-tab" class="tab-panel hidden">
+        <div class="section-header">
+          <div>
+            <h2>App Keys</h2>
+            <p>Quản lý key đăng nhập cho user và admin.</p>
+          </div>
+          <button id="add-key-btn" class="btn-primary" type="button">Thêm key</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Role</th>
+                <th>Key</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="keys-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="account-modal" class="modal-overlay hidden">
+    <form id="account-form" class="modal">
+      <div class="modal-header">
+        <h3 id="account-modal-title">Thêm account</h3>
+        <button class="icon-btn" type="button" data-close-modal="account-modal">×</button>
+      </div>
+      <div class="modal-body">
+        <input id="account-edit-id" type="hidden" />
+        <label>ID <input id="account-id" autocomplete="off" placeholder="account-1" /></label>
+        <label>Tên <input id="account-name" required autocomplete="off" placeholder="Default Chat Account" /></label>
+        <label class="check-row"><input id="account-enabled" type="checkbox" /> Bật account</label>
+        <label>__Secure-1PSID <input id="account-psid" type="password" autocomplete="off" /></label>
+        <label>__Secure-1PSIDTS <input id="account-psidts" type="password" autocomplete="off" /></label>
+        <label>Proxy <input id="account-proxy" autocomplete="off" placeholder="http://user:pass@host:port" /></label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" type="button" data-close-modal="account-modal">Hủy</button>
+        <button class="btn-primary" type="submit">Lưu</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="key-modal" class="modal-overlay hidden">
+    <form id="key-form" class="modal">
+      <div class="modal-header">
+        <h3 id="key-modal-title">Thêm App key</h3>
+        <button class="icon-btn" type="button" data-close-modal="key-modal">×</button>
+      </div>
+      <div class="modal-body">
+        <input id="key-edit-id" type="hidden" />
+        <label>ID <input id="key-id" required autocomplete="off" placeholder="user-1" /></label>
+        <label>Key <input id="key-value" type="password" autocomplete="off" /></label>
+        <label>Role
+          <select id="key-role">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+          </select>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" type="button" data-close-modal="key-modal">Hủy</button>
+        <button class="btn-primary" type="submit">Lưu</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/js/state.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

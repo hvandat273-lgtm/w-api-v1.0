@@ -17,9 +17,13 @@
         "name": "Default Chat Account",
         "enabled": true,
         "secure_1psid": "g.a0009wjuaLvq5YEd_d2hJip4ktVS69RqKxDEC150FB9KFtzRbI43t5Lcxwdcy-Llycke7I5JLQACgYKAZoSARcSFQHGX2MifO-wEhrkpwVCOd8W_0d0hhoVAUF8yKqTub2G46MBpfWzGbidhiV_0076",
-        "secure_1psidts": "sidts-CjYBhkeRd799EANl6sUVAfsnmUMF1pdKtqna6S-wxlZvT7y3Az1rXg0bDm0iem8gfTjGrNlITQYQAA",
+        "secure_1psidts": "sidts-CjYBhkeRdxD1faai6gahwcosp8p4waj2c4ryAq3yoPfX5Cj5VjCFM2gu9HF_1RyD08NbflAYqEkQAA",
         "proxy": "",
-        "metadata": {}
+        "metadata": {
+          "last_checked_at": "2026-05-13T01:36:18.952318+00:00",
+          "last_check_ok": true,
+          "last_check_message": "Cookie is usable."
+        }
       }
     ],
     "upload": {

@@ -19,6 +19,7 @@ const Settings = (() => {
     const input = document.getElementById('app-key-input');
     if (input) input.value = State.getApiKey();
     document.getElementById('settings-modal').classList.remove('hidden');
+    setTimeout(() => input?.focus(), 0);
   }
 
   function close() {
@@ -45,13 +46,30 @@ const Settings = (() => {
     close();
   }
 
-  function saveAppKey() {
+  async function saveAppKey() {
     const input = document.getElementById('app-key-input');
-    State.setApiKey(input.value);
-    Toast.show('Đã lưu App key', 'success');
+    const key = input.value.trim();
+    if (!key) {
+      Toast.show('Vui lòng nhập App key', 'error');
+      return;
+    }
+    try {
+      const identity = await API.me(key);
+      State.setApiKey(key);
+      window.dispatchEvent(new CustomEvent('app-key-verified', { detail: identity }));
+      Toast.show(`Đã lưu App key (${identity.role})`, 'success');
+    } catch (err) {
+      Toast.show(err.message || 'App key không hợp lệ', 'error', 5000);
+    }
   }
 
-  return { init, open, close };
+  function requireKey() {
+    if (State.getApiKey()) return;
+    open();
+    Toast.show('Vui lòng nhập App key để sử dụng chat', 'info', 4000);
+  }
+
+  return { init, open, close, requireKey };
 })();
 
 const Toast = (() => {

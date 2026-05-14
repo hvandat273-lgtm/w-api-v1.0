@@ -12,12 +12,12 @@
     "enabled": true,
     "default_model": "ag/gemini-3-flash",
     "router": {
-      "base_url": "https://rlxivmf.9router.com/v1",
-      "api_key": "sk-deb62049eac3ab7b-tjyvw0-5d8e08f4",
+      "base_url": "https://wieldiest-bret-unlocal.ngrok-free.dev/v1",
+      "api_key": "sk-511d214ab994faf4-3kcz2a-d44c4b29",
       "timeout_ms": 180000,
-      "last_checked_at": "2026-05-14T01:52:35.922Z",
-      "last_check_ok": true,
-      "last_check_message": "9Router is reachable. 6 model(s) available."
+      "last_checked_at": "2026-05-14T06:05:37.531Z",
+      "last_check_ok": false,
+      "last_check_message": "Chat is disabled."
     },
     "upload": {
       "max_file_mb": 20,

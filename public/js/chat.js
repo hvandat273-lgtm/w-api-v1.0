@@ -2,6 +2,7 @@ const Chat = (() => {
   let _currentConvId = null;
   let _jpViMode = false;
   const STREAM_RENDER_INTERVAL_MS = 80;
+  const PROCESSING_MODEL = 'ag/gemini-3-flash';
 
   const JP_VI_PROMPT = `Bạn là một chuyên gia dịch thuật Nhật - Việt chuyên sâu về lĩnh vực Thiết kế đồ họa/IT/Kỹ thuật. Hãy phân tích hình ảnh tôi cung cấp và dịch theo yêu cầu sau:
 
@@ -19,10 +20,22 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
 
   const SUGGESTIONS = [
     { icon: '📄', title: 'Tóm tắt tài liệu', desc: 'Upload TXT/MD/JSON/CSV/LOG và hỏi về nội dung', prompt: 'Hãy tóm tắt nội dung tài liệu này cho tôi.' },
-    { icon: '🖼️', title: 'Phân tích ảnh', desc: 'Đính kèm ảnh để Gemini đọc và mô tả nội dung', prompt: 'Hãy phân tích ảnh này.' },
+    { icon: '🖼️', title: 'Phân tích ảnh', desc: 'Đính kèm ảnh để model đọc và mô tả nội dung', prompt: 'Hãy phân tích ảnh này.' },
     { icon: '💻', title: 'Viết code', desc: 'Giải thích, sửa lỗi hoặc tạo đoạn code', prompt: 'Viết một hàm Python để ' },
     { icon: '✍️', title: 'Soạn thảo văn bản', desc: 'Email, báo cáo, bài viết, nội dung sáng tạo', prompt: 'Hãy giúp tôi viết ' },
   ];
+
+  const AI_AVATAR_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="geminiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#4285F4"/>
+        <stop offset="35%" stop-color="#9B59B6"/>
+        <stop offset="65%" stop-color="#E91E8C"/>
+        <stop offset="100%" stop-color="#F4A61A"/>
+      </linearGradient>
+    </defs>
+    <path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z" fill="url(#geminiGrad)"/>
+  </svg>`;
 
   function init() {
     document.getElementById('send-btn').addEventListener('click', sendMessage);
@@ -50,7 +63,7 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
   function autoResize() {
     const ta = document.getElementById('msg-input');
     ta.style.height = 'auto';
-    ta.style.height = `${Math.min(ta.scrollHeight, 180)}px`;
+    ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`;
   }
 
   function updateSendBtn() {
@@ -70,8 +83,8 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
     ).join('');
 
     messages.innerHTML = `<div class="welcome">
-      <h2>Xin chào!</h2>
-      <p class="welcome-sub">Tôi có thể giúp gì cho bạn hôm nay?</p>
+      <h2>Xin chào</h2>
+      <p class="welcome-sub">Tôi có thể giúp gì cho bạn?</p>
       <div class="suggestion-grid">${cardsHtml}</div>
     </div>`;
   }
@@ -111,6 +124,33 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
 
     scrollToBottom();
     updateSendBtn();
+  }
+
+  function _buildAssistantInner(inner, bubble) {
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'ai-avatar';
+    avatarEl.innerHTML = AI_AVATAR_SVG;
+
+    const contentWrap = document.createElement('div');
+    contentWrap.className = 'assistant-content-wrap';
+
+    contentWrap.appendChild(bubble);
+
+    const actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.innerHTML = `<button class="msg-action-btn" onclick="Chat.copyMsg(this)" title="Sao chép">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <button class="msg-action-btn" title="Thích">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+      </button>
+      <button class="msg-action-btn" title="Không thích">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+      </button>`;
+    contentWrap.appendChild(actions);
+
+    inner.appendChild(avatarEl);
+    inner.appendChild(contentWrap);
   }
 
   function appendMessage(msg, scroll = true) {
@@ -153,16 +193,11 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
       contentDiv.innerHTML = Markdown.render(typeof msg.content === 'string' ? msg.content : '');
     }
     bubble.appendChild(contentDiv);
-    inner.appendChild(bubble);
 
     if (msg.role === 'assistant') {
-      const actions = document.createElement('div');
-      actions.className = 'msg-actions';
-      actions.innerHTML = `<button class="msg-action-btn" onclick="Chat.copyMsg(this)" title="Sao chép">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Sao chép
-      </button>`;
-      inner.appendChild(actions);
+      _buildAssistantInner(inner, bubble);
+    } else {
+      inner.appendChild(bubble);
     }
 
     block.appendChild(inner);
@@ -187,7 +222,8 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
     const contentDiv = document.createElement('div');
     contentDiv.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
     bubble.appendChild(contentDiv);
-    inner.appendChild(bubble);
+
+    _buildAssistantInner(inner, bubble);
     block.appendChild(inner);
     messages.appendChild(block);
     scrollToBottom();
@@ -201,15 +237,15 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
     const attachments = State.getPendingAttachments();
     if (!text && attachments.length === 0) return;
 
+    const displayModel = document.getElementById('model-select').value;
+    State.setModel(displayModel);
+
     if (!_currentConvId) {
       const conv = State.newConversation();
       State.setActiveConv(conv.id);
       _currentConvId = conv.id;
       Sidebar.render();
     }
-
-    const model = document.getElementById('model-select').value;
-    State.setModel(model);
 
     const userMsg = {
       id: State.uuid(),
@@ -252,11 +288,12 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
     State.setStreaming(true);
     document.getElementById('send-btn').disabled = true;
     const contentDiv = createStreamingBubble();
+    document.querySelector('#streaming-block .ai-avatar')?.classList.add('loading');
     let streamingRenderer = null;
 
     try {
       streamingRenderer = createStreamingRenderer(contentDiv);
-      const finalText = await API.chat(apiMessages, model, (accumulated, delta) => {
+      const finalText = await API.chat(apiMessages, PROCESSING_MODEL, (accumulated, delta) => {
         streamingRenderer.push(accumulated, delta);
       }, apiAttachments, _currentConvId);
 
@@ -276,6 +313,7 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
       Toast.show(err.message, 'error', 5000);
     } finally {
       State.setStreaming(false);
+      document.getElementById('streaming-block')?.querySelector('.ai-avatar')?.classList.remove('loading');
       document.getElementById('streaming-block')?.removeAttribute('id');
       updateSendBtn();
       scrollToBottom();
@@ -286,7 +324,7 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
     const bubble = btn.closest('.msg-block').querySelector('.msg-bubble');
     navigator.clipboard.writeText(bubble.innerText).then(() => {
       const orig = btn.innerHTML;
-      btn.innerHTML = btn.innerHTML.replace('Sao chép', 'Đã sao chép!');
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>`;
       setTimeout(() => { btn.innerHTML = orig; }, 2000);
     });
   }
@@ -302,7 +340,7 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
     let timer = null;
     const textNode = document.createTextNode('');
 
-    contentDiv.className = 'streaming-cursor streaming-text';
+    contentDiv.className = 'streaming-shimmer';
     contentDiv.innerHTML = '';
     contentDiv.appendChild(textNode);
 

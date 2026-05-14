@@ -10,22 +10,15 @@
   },
   "chat": {
     "enabled": true,
-    "default_model": "auto",
-    "accounts": [
-      {
-        "id": "account-1",
-        "name": "Default Chat Account",
-        "enabled": true,
-        "secure_1psid": "g.a0009wjuaLvq5YEd_d2hJip4ktVS69RqKxDEC150FB9KFtzRbI43t5Lcxwdcy-Llycke7I5JLQACgYKAZoSARcSFQHGX2MifO-wEhrkpwVCOd8W_0d0hhoVAUF8yKqTub2G46MBpfWzGbidhiV_0076",
-        "secure_1psidts": "sidts-CjYBhkeRdxD1faai6gahwcosp8p4waj2c4ryAq3yoPfX5Cj5VjCFM2gu9HF_1RyD08NbflAYqEkQAA",
-        "proxy": "",
-        "metadata": {
-          "last_checked_at": "2026-05-13T03:19:25.676119+00:00",
-          "last_check_ok": true,
-          "last_check_message": "Cookie is usable."
-        }
-      }
-    ],
+    "default_model": "ag/gemini-3-flash",
+    "router": {
+      "base_url": "http://localhost:20128/v1",
+      "api_key": "sk-deb62049eac3ab7b-tjyvw0-5d8e08f4",
+      "timeout_ms": 180000,
+      "last_checked_at": "2026-05-14T01:52:35.922Z",
+      "last_check_ok": true,
+      "last_check_message": "9Router is reachable. 6 model(s) available."
+    },
     "upload": {
       "max_file_mb": 20,
       "max_files_per_message": 5

@@ -132,6 +132,35 @@ input:focus, select:focus { border-color: var(--border-focus); }
   border-radius: var(--radius);
 }
 
+.settings-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-secondary);
+}
+
+.settings-card label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -328,12 +357,17 @@ tr:last-child td { border-bottom: 0; }
 @media (max-width: 720px) {
   .admin-topbar,
   .section-header,
-  .auth-row {
+  .auth-row,
+  .settings-footer {
     align-items: stretch;
     flex-direction: column;
   }
 
   .topbar-actions {
     justify-content: space-between;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
   }
 }

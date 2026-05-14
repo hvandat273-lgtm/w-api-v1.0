@@ -1,17 +1,16 @@
 const AdminApp = (() => {
-  let accounts = [];
   let authKeys = [];
 
   function init() {
     State.load();
+    ensureRouterApiFallbacks();
     document.documentElement.setAttribute('data-theme', State.getTheme());
     document.getElementById('admin-key-input').value = State.getApiKey();
     document.getElementById('admin-key-save-btn').addEventListener('click', saveAdminKey);
-    document.getElementById('add-account-btn').addEventListener('click', () => openAccountModal());
+    document.getElementById('router-form').addEventListener('submit', saveRouterSettings);
+    document.getElementById('check-router-btn').addEventListener('click', checkRouterSettings);
     document.getElementById('add-key-btn').addEventListener('click', () => openKeyModal());
-    document.getElementById('account-form').addEventListener('submit', saveAccount);
     document.getElementById('key-form').addEventListener('submit', saveAuthKey);
-    document.getElementById('accounts-body').addEventListener('click', handleAccountAction);
     document.getElementById('keys-body').addEventListener('click', handleKeyAction);
     document.querySelectorAll('[data-close-modal]').forEach(btn => {
       btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
@@ -20,6 +19,38 @@ const AdminApp = (() => {
       btn.addEventListener('click', () => selectTab(btn.dataset.tab));
     });
     verifyAdmin();
+  }
+
+  function ensureRouterApiFallbacks() {
+    if (typeof API.getRouterSettings !== 'function') {
+      API.getRouterSettings = () => adminRequest('/api/admin/router', { method: 'GET' });
+    }
+    if (typeof API.updateRouterSettings !== 'function') {
+      API.updateRouterSettings = payload => adminRequest('/api/admin/router', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+    if (typeof API.checkRouterSettings !== 'function') {
+      API.checkRouterSettings = () => adminRequest('/api/admin/router/check', { method: 'POST' });
+    }
+  }
+
+  async function adminRequest(path, options = {}) {
+    const key = State.getApiKey();
+    if (!key) throw new Error('Vui lòng nhập App key.');
+    const res = await fetch(path, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${key}`
+      }
+    });
+    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+    const data = isJson ? await res.json().catch(() => ({})) : null;
+    if (!res.ok) throw new Error(data?.detail || data?.error || `Lỗi server ${res.status}`);
+    return data;
   }
 
   async function saveAdminKey() {
@@ -57,7 +88,7 @@ const AdminApp = (() => {
     document.getElementById('identity-label').textContent = `${identity.id} (${identity.role})`;
     document.getElementById('auth-panel').classList.add('hidden');
     document.getElementById('admin-panel').classList.remove('hidden');
-    await Promise.all([loadAccounts(), loadAuthKeys()]);
+    await Promise.all([loadRouterSettings(), loadAuthKeys()]);
   }
 
   function showAuthOnly(message) {
@@ -67,44 +98,68 @@ const AdminApp = (() => {
     document.getElementById('auth-message').textContent = message;
   }
 
-  async function loadAccounts() {
-    accounts = await API.listAccounts();
-    renderAccounts();
+  async function loadRouterSettings() {
+    const settings = await API.getRouterSettings();
+    document.getElementById('router-enabled').checked = settings.enabled;
+    document.getElementById('router-base-url').value = settings.base_url || '';
+    document.getElementById('router-api-key').value = '';
+    document.getElementById('router-api-key-masked').value = settings.api_key_masked || '';
+    document.getElementById('router-max-file-mb').value = settings.upload?.max_file_mb || 20;
+    document.getElementById('router-max-files').value = settings.upload?.max_files_per_message || 5;
+
+    const modelSelect = document.getElementById('router-default-model');
+    if (![...modelSelect.options].some(option => option.value === settings.default_model)) {
+      modelSelect.add(new Option(settings.default_model, settings.default_model));
+    }
+    modelSelect.value = settings.default_model;
+
+    const meta = settings.metadata || {};
+    const status = meta.last_check_ok === true ? 'Alive' : meta.last_check_ok === false ? 'Dead' : 'Chưa check';
+    document.getElementById('router-status').textContent = meta.last_checked_at
+      ? `${status} - ${new Date(meta.last_checked_at).toLocaleString()} - ${meta.last_check_message || ''}`
+      : status;
+  }
+
+  async function saveRouterSettings(event) {
+    event.preventDefault();
+    const payload = {
+      enabled: document.getElementById('router-enabled').checked,
+      base_url: document.getElementById('router-base-url').value.trim(),
+      default_model: document.getElementById('router-default-model').value.trim(),
+      max_file_mb: Number(document.getElementById('router-max-file-mb').value || 20),
+      max_files_per_message: Number(document.getElementById('router-max-files').value || 5)
+    };
+    const apiKey = document.getElementById('router-api-key').value.trim();
+    if (apiKey) payload.api_key = apiKey;
+
+    try {
+      await API.updateRouterSettings(payload);
+      await loadRouterSettings();
+      showToast('Đã lưu cấu hình 9Router', 'success');
+    } catch (err) {
+      showToast(err.message, 'error', 5000);
+    }
+  }
+
+  async function checkRouterSettings() {
+    const button = document.getElementById('check-router-btn');
+    button.disabled = true;
+    button.textContent = 'Đang check';
+    try {
+      const result = await API.checkRouterSettings();
+      await loadRouterSettings();
+      showToast(result.message, result.ok ? 'success' : 'error', 5000);
+    } catch (err) {
+      showToast(err.message, 'error', 5000);
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Check';
+    }
   }
 
   async function loadAuthKeys() {
     authKeys = await API.listAuthKeys();
     renderAuthKeys();
-  }
-
-  function renderAccounts() {
-    const body = document.getElementById('accounts-body');
-    if (!accounts.length) {
-      body.innerHTML = '<tr><td colspan="8">Chưa có account nào.</td></tr>';
-      return;
-    }
-    body.innerHTML = accounts.map(account => {
-      const meta = account.metadata || {};
-      const lastCheck = meta.last_checked_at ? new Date(meta.last_checked_at).toLocaleString() : 'Chưa check';
-      const statusClass = meta.last_check_ok === true ? 'alive' : meta.last_check_ok === false ? 'dead' : '';
-      const statusText = meta.last_check_ok === true ? 'Alive' : meta.last_check_ok === false ? 'Dead' : 'Unknown';
-      return `<tr>
-        <td class="mono">${esc(account.id)}</td>
-        <td>${esc(account.name)}</td>
-        <td>${account.enabled ? 'Có' : 'Không'}</td>
-        <td class="mono">${account.proxy ? esc(account.proxy) : '-'}</td>
-        <td class="mono">${esc(account.secure_1psid_masked || '')}</td>
-        <td class="mono">${esc(account.secure_1psidts_masked || '')}</td>
-        <td><span class="status-pill ${statusClass}" title="${esc(lastCheck)}">${statusText}</span></td>
-        <td>
-          <div class="row-actions">
-            <button class="btn-secondary" data-account-action="check" data-id="${escAttr(account.id)}">Check</button>
-            <button class="btn-secondary" data-account-action="edit" data-id="${escAttr(account.id)}">Sửa</button>
-            <button class="btn-danger" data-account-action="delete" data-id="${escAttr(account.id)}">Xóa</button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
   }
 
   function renderAuthKeys() {
@@ -130,90 +185,8 @@ const AdminApp = (() => {
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
-    document.getElementById('accounts-tab').classList.toggle('hidden', tab !== 'accounts');
+    document.getElementById('router-tab').classList.toggle('hidden', tab !== 'router');
     document.getElementById('keys-tab').classList.toggle('hidden', tab !== 'keys');
-  }
-
-  function openAccountModal(account = null) {
-    document.getElementById('account-form').reset();
-    document.getElementById('account-edit-id').value = account?.id || '';
-    document.getElementById('account-modal-title').textContent = account ? 'Sửa account' : 'Thêm account';
-    document.getElementById('account-id').value = account?.id || '';
-    document.getElementById('account-id').readOnly = Boolean(account);
-    document.getElementById('account-name').value = account?.name || '';
-    document.getElementById('account-enabled').checked = account ? account.enabled : true;
-    document.getElementById('account-proxy').value = account?.proxy || '';
-    document.getElementById('account-psid').placeholder = account ? 'Để trống nếu không đổi' : '__Secure-1PSID';
-    document.getElementById('account-psidts').placeholder = account ? 'Để trống nếu không đổi' : '__Secure-1PSIDTS';
-    document.getElementById('account-modal').classList.remove('hidden');
-  }
-
-  async function saveAccount(event) {
-    event.preventDefault();
-    const editId = document.getElementById('account-edit-id').value;
-    const payload = {
-      name: document.getElementById('account-name').value.trim(),
-      enabled: document.getElementById('account-enabled').checked,
-      proxy: document.getElementById('account-proxy').value.trim()
-    };
-    const psid = document.getElementById('account-psid').value.trim();
-    const psidts = document.getElementById('account-psidts').value.trim();
-    if (psid) payload.secure_1psid = psid;
-    if (psidts) payload.secure_1psidts = psidts;
-
-    if (!editId) {
-      payload.id = document.getElementById('account-id').value.trim() || null;
-      if (!payload.secure_1psid || !payload.secure_1psidts) {
-        showToast('Cookie 1PSID và 1PSIDTS là bắt buộc khi thêm account.', 'error');
-        return;
-      }
-    }
-
-    try {
-      if (editId) await API.updateAccount(editId, payload);
-      else await API.createAccount(payload);
-      closeModal('account-modal');
-      await loadAccounts();
-      showToast('Đã lưu account', 'success');
-    } catch (err) {
-      showToast(err.message, 'error', 5000);
-    }
-  }
-
-  async function handleAccountAction(event) {
-    const button = event.target.closest('[data-account-action]');
-    if (!button) return;
-    const id = button.dataset.id;
-    const account = accounts.find(item => item.id === id);
-    if (button.dataset.accountAction === 'edit') {
-      openAccountModal(account);
-      return;
-    }
-    if (button.dataset.accountAction === 'delete') {
-      if (!confirm(`Xóa account ${id}?`)) return;
-      try {
-        await API.deleteAccount(id);
-        await loadAccounts();
-        showToast('Đã xóa account', 'success');
-      } catch (err) {
-        showToast(err.message, 'error', 5000);
-      }
-      return;
-    }
-    if (button.dataset.accountAction === 'check') {
-      button.disabled = true;
-      button.textContent = 'Đang check';
-      try {
-        const result = await API.checkAccount(id);
-        await loadAccounts();
-        showToast(result.message, result.ok ? 'success' : 'error', 5000);
-      } catch (err) {
-        showToast(err.message, 'error', 5000);
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Check';
-      }
-    }
   }
 
   function openKeyModal(item = null) {

@@ -158,32 +158,20 @@ const API = (() => {
     return data;
   }
 
-  async function listAccounts() {
-    return request('/api/admin/accounts', { method: 'GET' });
+  async function getRouterSettings() {
+    return request('/api/admin/router', { method: 'GET' });
   }
 
-  async function createAccount(payload) {
-    return request('/api/admin/accounts', {
-      method: 'POST',
-      headers: JSON_HEADERS,
-      body: JSON.stringify(payload)
-    });
-  }
-
-  async function updateAccount(id, payload) {
-    return request(`/api/admin/accounts/${encodeURIComponent(id)}`, {
+  async function updateRouterSettings(payload) {
+    return request('/api/admin/router', {
       method: 'PATCH',
       headers: JSON_HEADERS,
       body: JSON.stringify(payload)
     });
   }
 
-  async function deleteAccount(id) {
-    return request(`/api/admin/accounts/${encodeURIComponent(id)}`, { method: 'DELETE' });
-  }
-
-  async function checkAccount(id) {
-    return request(`/api/admin/accounts/${encodeURIComponent(id)}/check`, { method: 'POST' });
+  async function checkRouterSettings() {
+    return request('/api/admin/router/check', { method: 'POST' });
   }
 
   async function listAuthKeys() {
@@ -212,7 +200,7 @@ const API = (() => {
 
   return {
     chat, uploadFile, me,
-    listAccounts, createAccount, updateAccount, deleteAccount, checkAccount,
+    getRouterSettings, updateRouterSettings, checkRouterSettings,
     listAuthKeys, createAuthKey, updateAuthKey, deleteAuthKey
   };
 })();

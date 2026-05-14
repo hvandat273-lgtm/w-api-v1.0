@@ -9,17 +9,13 @@ const Settings = (() => {
     document.getElementById('theme-dark-btn').addEventListener('click', () => applyTheme('dark'));
     document.getElementById('theme-light-btn').addEventListener('click', () => applyTheme('light'));
     document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
-    document.getElementById('save-app-key-btn')?.addEventListener('click', saveAppKey);
 
     applyTheme(State.getTheme());
   }
 
   function open() {
     updateThemeBtns(State.getTheme());
-    const input = document.getElementById('app-key-input');
-    if (input) input.value = State.getApiKey();
     document.getElementById('settings-modal').classList.remove('hidden');
-    setTimeout(() => input?.focus(), 0);
   }
 
   function close() {
@@ -65,7 +61,6 @@ const Settings = (() => {
 
   function requireKey() {
     if (State.getApiKey()) return;
-    open();
     Toast.show('Vui lòng nhập App key để sử dụng chat', 'info', 4000);
   }
 

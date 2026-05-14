@@ -12,7 +12,7 @@
     "enabled": true,
     "default_model": "ag/gemini-3-flash",
     "router": {
-      "base_url": "http://localhost:20128/v1",
+      "base_url": "https://rlxivmf.9router.com/v1",
       "api_key": "sk-deb62049eac3ab7b-tjyvw0-5d8e08f4",
       "timeout_ms": 180000,
       "last_checked_at": "2026-05-14T01:52:35.922Z",

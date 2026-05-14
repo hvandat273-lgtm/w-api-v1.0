@@ -9,10 +9,28 @@ const PROCESSING_MODEL = "ag/gemini-3-flash";
 
 export class ConfigStore {
   constructor(configPath = CONFIG_PATH) {
-    this.configPath = configPath;
+    if (process.env.VERCEL) {
+      this._baseConfigPath = configPath;
+      this.configPath = "/tmp/config.json";
+    } else {
+      this._baseConfigPath = null;
+      this.configPath = configPath;
+    }
   }
 
   read() {
+    // On Vercel: check writable /tmp first (has runtime changes), fall back to deployed config
+    if (this._baseConfigPath) {
+      if (fs.existsSync(this.configPath)) {
+        const raw = JSON.parse(fs.readFileSync(this.configPath, "utf8"));
+        return normalizeConfig(raw);
+      }
+      if (fs.existsSync(this._baseConfigPath)) {
+        const raw = JSON.parse(fs.readFileSync(this._baseConfigPath, "utf8"));
+        return normalizeConfig(raw);
+      }
+      return normalizeConfig({});
+    }
     if (!fs.existsSync(this.configPath)) {
       return normalizeConfig({});
     }
@@ -61,6 +79,7 @@ export function normalizeConfig(raw) {
     chat: {
       enabled: chat.enabled !== false,
       default_model: defaultModel,
+      system_prompt: typeof chat.system_prompt === "string" ? chat.system_prompt : "",
       router: {
         base_url: String(
           router.base_url ||

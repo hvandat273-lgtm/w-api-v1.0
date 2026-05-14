@@ -15,7 +15,7 @@ export class RouterClient {
   async complete(config, messages, model, attachments) {
     const payload = {
       model,
-      messages: await this.buildMessages(messages, attachments),
+      messages: await this.buildMessages(messages, attachments, config.chat.system_prompt),
       stream: false,
     };
     const data = await this.requestJson(config, "/chat/completions", {
@@ -31,7 +31,7 @@ export class RouterClient {
       method: "POST",
       body: {
         model,
-        messages: await this.buildMessages(messages, attachments),
+        messages: await this.buildMessages(messages, attachments, config.chat.system_prompt),
         stream: true,
       },
       timeoutMs: config.chat.router.timeout_ms,
@@ -55,11 +55,15 @@ export class RouterClient {
     }
   }
 
-  async buildMessages(messages, attachments) {
-    const upstreamMessages = messages.map((message) => ({
+  async buildMessages(messages, attachments, systemPrompt = "") {
+    const upstreamMessages = [];
+    if (systemPrompt) {
+      upstreamMessages.push({ role: "system", content: systemPrompt });
+    }
+    upstreamMessages.push(...messages.map((message) => ({
       role: message.role,
       content: String(message.content || ""),
-    }));
+    })));
 
     if (!attachments.length) return upstreamMessages;
 

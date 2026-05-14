@@ -154,6 +154,28 @@ input:focus, select:focus { border-color: var(--border-focus); }
   gap: 12px;
 }
 
+.settings-full {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-full textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.settings-full textarea:focus { border-color: var(--border-focus); }
+
 .settings-footer {
   display: flex;
   align-items: center;

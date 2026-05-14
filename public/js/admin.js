@@ -106,6 +106,7 @@ const AdminApp = (() => {
     document.getElementById('router-api-key-masked').value = settings.api_key_masked || '';
     document.getElementById('router-max-file-mb').value = settings.upload?.max_file_mb || 20;
     document.getElementById('router-max-files').value = settings.upload?.max_files_per_message || 5;
+    document.getElementById('router-system-prompt').value = settings.system_prompt || '';
 
     const modelSelect = document.getElementById('router-default-model');
     if (![...modelSelect.options].some(option => option.value === settings.default_model)) {
@@ -127,7 +128,8 @@ const AdminApp = (() => {
       base_url: document.getElementById('router-base-url').value.trim(),
       default_model: document.getElementById('router-default-model').value.trim(),
       max_file_mb: Number(document.getElementById('router-max-file-mb').value || 20),
-      max_files_per_message: Number(document.getElementById('router-max-files').value || 5)
+      max_files_per_message: Number(document.getElementById('router-max-files').value || 5),
+      system_prompt: document.getElementById('router-system-prompt').value
     };
     const apiKey = document.getElementById('router-api-key').value.trim();
     if (apiKey) payload.api_key = apiKey;

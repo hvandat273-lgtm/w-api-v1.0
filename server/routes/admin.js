@@ -31,6 +31,9 @@ export function createAdminRouter({ store, routerClient }) {
       if (payload.max_files_per_message != null) {
         config.chat.upload.max_files_per_message = Number(payload.max_files_per_message);
       }
+      if (typeof payload.system_prompt === "string") {
+        config.chat.system_prompt = payload.system_prompt;
+      }
     });
     res.json(publicRouterSettings(updated));
   }));
@@ -109,6 +112,7 @@ function publicRouterSettings(config) {
   return {
     enabled: config.chat.enabled,
     default_model: config.chat.default_model,
+    system_prompt: config.chat.system_prompt || "",
     base_url: router.base_url,
     api_key_masked: maskSecret(router.api_key),
     has_api_key: Boolean(router.api_key),

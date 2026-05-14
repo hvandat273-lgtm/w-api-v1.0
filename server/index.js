@@ -62,6 +62,8 @@ app.use((error, _req, res, _next) => {
   res.status(status).json({ detail: error.message || "Internal server error." });
 });
 
+export default app;
+
 const port = Number(process.env.PORT || 8022);
 const host = process.env.HOST || "0.0.0.0";
 const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : "";

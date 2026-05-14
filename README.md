@@ -23,6 +23,3 @@ Edit `config.json`:
   for example `http://localhost:20128/v1`.
 - `chat.router.api_key` is the 9Router API key.
 - `chat.default_model` is the default model when the UI selects `Auto`.
-
-The old Python/FastAPI implementation remains in `app/` as legacy code, but the
-primary runtime is now `server/index.js`.

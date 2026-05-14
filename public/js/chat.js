@@ -21,7 +21,7 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
   const SUGGESTIONS = [
     { icon: '📄', title: 'Tóm tắt tài liệu', desc: 'Upload TXT/MD/JSON/CSV/LOG và hỏi về nội dung', prompt: 'Hãy tóm tắt nội dung tài liệu này cho tôi.' },
     { icon: '🖼️', title: 'Phân tích ảnh', desc: 'Đính kèm ảnh để model đọc và mô tả nội dung', prompt: 'Hãy phân tích ảnh này.' },
-    { icon: '💻', title: 'Viết code', desc: 'Giải thích, sửa lỗi hoặc tạo đoạn code', prompt: 'Viết một hàm Python để ' },
+    { icon: '💻', title: 'Viết code', desc: 'Giải thích, sửa lỗi hoặc tạo đoạn code', prompt: 'Viết một hàm JavaScript để ' },
     { icon: '✍️', title: 'Soạn thảo văn bản', desc: 'Email, báo cáo, bài viết, nội dung sáng tạo', prompt: 'Hãy giúp tôi viết ' },
   ];
 

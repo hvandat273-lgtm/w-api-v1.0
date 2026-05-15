@@ -1,7 +1,16 @@
 const Sidebar = (() => {
+  const mobileQuery = window.matchMedia('(max-width: 768px)');
+
   function init() {
     document.getElementById('new-chat-icon-btn').addEventListener('click', newChat);
     document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
+    document.getElementById('sidebar-backdrop')?.addEventListener('click', () => setMobileSidebarOpen(false));
+    if (mobileQuery.addEventListener) {
+      mobileQuery.addEventListener('change', syncViewportMode);
+    } else {
+      mobileQuery.addListener(syncViewportMode);
+    }
+    syncViewportMode();
   }
 
   function render() {
@@ -48,6 +57,7 @@ const Sidebar = (() => {
     State.setActiveConv(conv.id);
     render();
     Chat.loadConversation(conv.id);
+    if (isMobile()) setMobileSidebarOpen(false);
   }
 
   function loadConv(id) {
@@ -55,9 +65,7 @@ const Sidebar = (() => {
     State.setActiveConv(id);
     render();
     Chat.loadConversation(id);
-    if (window.innerWidth <= 768) {
-      document.getElementById('sidebar').classList.add('collapsed');
-    }
+    if (isMobile()) setMobileSidebarOpen(false);
   }
 
   function deleteConv(e, id) {
@@ -77,7 +85,46 @@ const Sidebar = (() => {
   }
 
   function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
+    const sidebar = document.getElementById('sidebar');
+    if (isMobile()) {
+      setMobileSidebarOpen(!sidebar.classList.contains('open'));
+      return;
+    }
+    sidebar.classList.toggle('collapsed');
+    updateToggleState();
+  }
+
+  function syncViewportMode() {
+    const sidebar = document.getElementById('sidebar');
+    if (isMobile()) {
+      setMobileSidebarOpen(false);
+      return;
+    }
+    sidebar.classList.remove('open', 'collapsed');
+    document.body.classList.remove('sidebar-drawer-open');
+    updateToggleState();
+  }
+
+  function setMobileSidebarOpen(open) {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('open', open);
+    sidebar.classList.toggle('collapsed', !open);
+    document.body.classList.toggle('sidebar-drawer-open', open);
+    updateToggleState();
+  }
+
+  function updateToggleState() {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebar-toggle');
+    if (!toggle) return;
+    const expanded = isMobile()
+      ? sidebar.classList.contains('open')
+      : !sidebar.classList.contains('collapsed');
+    toggle.setAttribute('aria-expanded', String(expanded));
+  }
+
+  function isMobile() {
+    return mobileQuery.matches;
   }
 
   function escHtml(str) {

@@ -1,27 +1,32 @@
 const Chat = (() => {
   let _currentConvId = null;
-  let _jpViMode = false;
+  let _jpViMode = true;
   const STREAM_RENDER_INTERVAL_MS = 80;
 
-  const JP_VI_PROMPT = `Bạn là một chuyên gia dịch thuật Nhật - Việt chuyên sâu về lĩnh vực Thiết kế đồ họa/IT/Kỹ thuật. Hãy phân tích hình ảnh tôi cung cấp và dịch theo yêu cầu sau:
+  const JP_VI_PROMPT = `Bạn là một chuyên gia dịch thuật Nhật - Việt chuyên sâu về lĩnh vực thiết kế đồ họa, in ấn, UI/UX, branding, DTP và trao đổi kỹ thuật giữa designer/developer. Nhiệm vụ chính của bạn là đọc hiểu tiếng Nhật trong ảnh/file/tin nhắn và chuyển sang tiếng Việt tự nhiên, chính xác theo ngữ cảnh thiết kế.
 
-Trích xuất văn bản: Đọc chính xác toàn bộ chữ trong ảnh, bao gồm cả văn bản máy, chữ viết tay và các ký hiệu chú thích.
+Ưu tiên:
+- Dịch Nhật -> Việt. Nếu người dùng đưa tiếng Việt cần chuyển sang tiếng Nhật, hãy dịch Việt -> Nhật theo văn phong công việc.
+- Giữ đúng thuật ngữ chuyên ngành thiết kế đồ họa, in ấn, layout, typography, màu sắc, mockup, banner, logo, UI, file thiết kế và feedback chỉnh sửa.
+- Không tự chuyển sang hướng viết code, giải thích lập trình hoặc đề xuất kỹ thuật code trừ khi người dùng yêu cầu rõ ràng.
+- Không diễn giải lan man. Tập trung vào bản dịch, sắc thái ý nghĩa và ghi chú thuật ngữ cần thiết.
 
-Trình bày song ngữ: Hiển thị kết quả dưới dạng bảng hoặc danh sách theo cấu trúc:
+Khi có ảnh/file:
+- Trích xuất chính xác toàn bộ chữ trong ảnh/file, bao gồm chữ máy, chữ viết tay, nhãn, ghi chú, ký hiệu và tên file nếu có.
+- Chia bản dịch theo từng khu vực dễ theo dõi, ví dụ: Tiêu đề, nội dung chính, ghi chú đỏ, chú thích, tên layer/file.
+- Giữ nguyên mã số, tên file, tên layer, kích thước, thông số kỹ thuật, màu, mã màu, đơn vị đo và ký hiệu.
 
-[Tiếng Nhật gốc] -> [Tiếng Việt dịch]
+Định dạng trả lời mặc định:
+| Tiếng Nhật gốc | Tiếng Việt dịch | Ghi chú |
+|---|---|---|
 
-Phân loại khu vực: Chia bản dịch theo từng phần của ảnh (ví dụ: Tiêu đề, Các gạch đầu dòng, Ghi chú viết tay màu đỏ, Tên file...) để tôi dễ theo dõi.
-
-Giải thích thuật ngữ: Nếu có các thuật ngữ chuyên ngành hoặc từ viết tắt khó hiểu, hãy chú thích rõ ý nghĩa kỹ thuật của chúng ở bên dưới.
-
-Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông số kỹ thuật.`;
+Nếu văn bản gốc mơ hồ, khó đọc hoặc có nhiều cách hiểu, hãy ghi rõ phần chưa chắc chắn và đưa phương án dịch phù hợp nhất với ngữ cảnh thiết kế.`;
 
   const SUGGESTIONS = [
-    { icon: '📄', title: 'Tóm tắt tài liệu', desc: 'Upload TXT/MD/JSON/CSV/LOG và hỏi về nội dung', prompt: 'Hãy tóm tắt nội dung tài liệu này cho tôi.' },
-    { icon: '🖼️', title: 'Phân tích ảnh', desc: 'Đính kèm ảnh để model đọc và mô tả nội dung', prompt: 'Hãy phân tích ảnh này.' },
-    { icon: '💻', title: 'Viết code', desc: 'Giải thích, sửa lỗi hoặc tạo đoạn code', prompt: 'Viết một hàm JavaScript để ' },
-    { icon: '✍️', title: 'Soạn thảo văn bản', desc: 'Email, báo cáo, bài viết, nội dung sáng tạo', prompt: 'Hãy giúp tôi viết ' },
+    { icon: '📄', title: 'Dịch tài liệu Nhật - Việt', desc: 'Upload TXT/MD/JSON/CSV/LOG và dịch theo ngữ cảnh thiết kế', prompt: 'Hãy dịch tài liệu này sang tiếng Việt, giữ đúng thuật ngữ thiết kế đồ họa.' },
+    { icon: '🖼️', title: 'Dịch chữ trong ảnh', desc: 'Đính kèm ảnh thiết kế để trích xuất và dịch văn bản', prompt: 'Hãy đọc toàn bộ chữ trong ảnh và dịch sang tiếng Việt theo bảng song ngữ.' },
+    { icon: '🎨', title: 'Giải thích feedback thiết kế', desc: 'Dịch và làm rõ yêu cầu chỉnh sửa từ tiếng Nhật', prompt: 'Hãy dịch và giải thích feedback thiết kế này sang tiếng Việt dễ hiểu.' },
+    { icon: '✍️', title: 'Soạn phản hồi tiếng Nhật', desc: 'Viết câu trả lời lịch sự cho khách hàng/đối tác Nhật', prompt: 'Hãy giúp tôi viết phản hồi tiếng Nhật lịch sự cho nội dung sau: ' },
   ];
 
   const AI_AVATAR_SVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -39,6 +44,7 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
   function init() {
     document.getElementById('send-btn').addEventListener('click', sendMessage);
     document.getElementById('jp-vi-btn')?.addEventListener('click', toggleJpViMode);
+    syncJpViModeButton();
     document.getElementById('msg-input').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -53,10 +59,15 @@ Hãy giữ nguyên định dạng của các mã số, tên file hoặc thông s
 
   function toggleJpViMode() {
     _jpViMode = !_jpViMode;
+    syncJpViModeButton();
+    Toast.show(_jpViMode ? 'Đã bật prompt dịch Nhật - Việt' : 'Đã tắt prompt dịch Nhật - Việt', 'info', 1800);
+  }
+
+  function syncJpViModeButton() {
     const btn = document.getElementById('jp-vi-btn');
+    if (!btn) return;
     btn.classList.toggle('active', _jpViMode);
     btn.setAttribute('aria-pressed', String(_jpViMode));
-    Toast.show(_jpViMode ? 'Đã bật prompt dịch Nhật - Việt' : 'Đã tắt prompt dịch Nhật - Việt', 'info', 1800);
   }
 
   function autoResize() {

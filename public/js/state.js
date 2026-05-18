@@ -42,7 +42,7 @@ const State = (() => {
     }
     try {
       localStorage.setItem(KEYS.conversations, json);
-    } catch (_) {}
+    } catch (_) { }
   }
 
   function uuid() {

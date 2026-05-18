@@ -115,7 +115,10 @@ function normalizeDefaultModel(model) {
 }
 
 export function resolveChatModel(requestedModel, config) {
-  return config.chat.processing_model || PROCESSING_MODEL;
+  // Use the model requested by the client, or fall back to the configured default
+  const model = String(requestedModel || "").trim();
+  if (model && model !== "auto" && model !== "default") return model;
+  return config.chat.default_model || PROCESSING_MODEL;
 }
 
 export function maskSecret(value) {

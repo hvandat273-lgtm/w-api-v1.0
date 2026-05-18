@@ -103,6 +103,14 @@ const State = (() => {
     localStorage.removeItem(KEYS.activeConv);
   }
 
+  function setConversationModel(convId, model) {
+    const conv = _state.conversations.find(c => c.id === convId);
+    if (conv) {
+      conv.model = model;
+      _saveConversations();
+    }
+  }
+
   function addMessage(convId, message) {
     const conv = _state.conversations.find(c => c.id === convId);
     if (!conv) return;
@@ -129,7 +137,7 @@ const State = (() => {
     getTheme, setTheme,
     getModel, setModel,
     getConversations, newConversation, getActiveConv, setActiveConv,
-    deleteConversation, clearAllConversations,
+    deleteConversation, clearAllConversations, setConversationModel,
     addMessage,
     getPendingAttachments, addPendingAttachment, clearPendingAttachments, removePendingAttachment,
     isStreaming, setStreaming

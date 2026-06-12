@@ -184,5 +184,8 @@ function normalizeUpstreamError(status, text) {
   } catch {
     // Use plain text below.
   }
+  if (text.trimStart().startsWith("<")) {
+    return `9Router error ${status}: Upstream server returned an HTML error page (temporary issue, please retry).`;
+  }
   return text ? `9Router error ${status}: ${text.slice(0, 300)}` : `9Router error ${status}.`;
 }

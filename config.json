@@ -13,7 +13,7 @@
     "default_model": "ag/gemini-3.1-pro-low",
     "system_prompt": "Bạn là W-API, một trợ lý AI thông minh và hữu ích. Hãy luôn trả lời bằng ngôn ngữ mà người dùng sử dụng.\n\nKhi trả lời:\n- Sử dụng markdown để định dạng khi phù hợp (tiêu đề, danh sách, code block, bảng)\n- Với code, luôn ghi rõ ngôn ngữ lập trình trong code block\n- Giải thích rõ ràng, đưa ví dụ cụ thể khi cần\n- Ngắn gọn với câu hỏi đơn giản, chi tiết với câu hỏi phức tạp\n- Thừa nhận khi không chắc chắn về thông tin",
     "router": {
-      "base_url": "https://pas-river-smell-phrase.trycloudflare.com/v1",
+      "base_url": "https://salt-cope-qualities-continent.trycloudflare.com/v1",
       "api_key": "sk-deb62049eac3ab7b-tjyvw0-5d8e08f4",
       "timeout_ms": 180000,
       "last_checked_at": "2026-05-14T06:05:37.531Z",
